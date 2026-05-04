@@ -1,7 +1,14 @@
 "use client";
-export const dynamic = "force-dynamic";
+
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
+import {
+  FormEvent,
+  MouseEvent,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type FormattingState = {
@@ -20,7 +27,7 @@ const defaultFormatting: FormattingState = {
   orderedList: false,
 };
 
-export default function NewNotePage() {
+function NoteEditor() {
   const router = useRouter();
   const supabase = getSupabaseClient();
   const searchParams = useSearchParams();
@@ -368,5 +375,19 @@ export default function NewNotePage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewNotePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-zinc-50">
+          <p className="text-zinc-600">Loading note...</p>
+        </div>
+      }
+    >
+      <NoteEditor />
+    </Suspense>
   );
 }

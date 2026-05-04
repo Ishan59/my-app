@@ -1,7 +1,7 @@
 "use client";
-export const dynamic = "force-dynamic";
+
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type ChecklistItem = {
@@ -10,7 +10,7 @@ type ChecklistItem = {
   checked: boolean;
 };
 
-export default function NewChecklistPage() {
+function ChecklistEditor() {
   const router = useRouter();
   const supabase = getSupabaseClient();
   const searchParams = useSearchParams();
@@ -267,5 +267,19 @@ export default function NewChecklistPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewChecklistPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-zinc-50">
+          <p className="text-zinc-600">Loading checklist...</p>
+        </div>
+      }
+    >
+      <ChecklistEditor />
+    </Suspense>
   );
 }
