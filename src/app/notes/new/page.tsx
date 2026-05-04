@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 type FormattingState = {
   bold: boolean;
@@ -22,6 +22,7 @@ const defaultFormatting: FormattingState = {
 
 export default function NewNotePage() {
   const router = useRouter();
+  const supabase = getSupabaseClient();
   const searchParams = useSearchParams();
   const noteId = searchParams.get("id");
   const editorRef = useRef<HTMLDivElement>(null);

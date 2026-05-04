@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 type ChecklistItem = {
   id?: string;
@@ -12,6 +12,7 @@ type ChecklistItem = {
 
 export default function NewChecklistPage() {
   const router = useRouter();
+  const supabase = getSupabaseClient();
   const searchParams = useSearchParams();
   const checklistId = searchParams.get("id");
   const [title, setTitle] = useState("");

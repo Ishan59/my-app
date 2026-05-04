@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 type Note = {
   id: string;
@@ -52,6 +52,7 @@ function TrashIcon() {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const supabase = getSupabaseClient();
   const [notes, setNotes] = useState<Note[]>([]);
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
