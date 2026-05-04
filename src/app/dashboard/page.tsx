@@ -18,8 +18,26 @@ type Checklist = {
   created_at: string | null;
 };
 
-const toPlainText = (value: string | null) =>
-  (value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+const toPlainText = (value: string | null) => {
+  if (!value) return "";
+  return (
+    value
+      // Remove HTML tags
+      .replace(/<[^>]*>/g, " ")
+      // Replace common HTML entities and special characters
+      .replace(/&nbsp;|&#160;|\u00A0/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;|&#39;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      // Remove any leftover unmatched entities
+      .replace(/&[a-zA-Z0-9#]+;/g, " ")
+      // Normalize all whitespace (spaces, tabs, newlines, etc)
+      .replace(/\s+/g, " ")
+      .trim()
+  );
+};
 
 function PlusIcon() {
   return (
