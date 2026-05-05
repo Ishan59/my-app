@@ -19,6 +19,36 @@ type FormattingState = {
   orderedList: boolean;
 };
 
+type BrowserSpeechRecognitionEvent = {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: {
+      isFinal: boolean;
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+};
+
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  abort: () => void;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionWindow = Window & {
+  SpeechRecognition?: new () => BrowserSpeechRecognition;
+  webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+};
+
 const defaultFormatting: FormattingState = {
   bold: false,
   italic: false,
@@ -34,11 +64,13 @@ function NoteEditor() {
   const noteId = searchParams.get("id");
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(noteId));
+  const [isListening, setIsListening] = useState(false);
   const [font, setFont] = useState("Arial");
   const [formatting, setFormatting] = useState<FormattingState>(defaultFormatting);
 
@@ -163,6 +195,73 @@ function NoteEditor() {
   const handleFontChange = (value: string) => {
     applyCommand("fontName", value);
     setFont(value);
+  };
+
+  const insertDictatedText = (text: string) => {
+    if (!editorRef.current || !text.trim()) {
+      return;
+    }
+
+    restoreSelection();
+    editorRef.current.focus();
+    document.execCommand("insertText", false, text);
+    setContent(editorRef.current.innerHTML);
+    saveSelection();
+  };
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+    };
+  }, []);
+
+  const handleVoiceToggle = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const speechWindow = window as SpeechRecognitionWindow;
+    const SpeechRecognition =
+      speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setError("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (event) => {
+      let transcript = "";
+
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        if (event.results[index].isFinal) {
+          transcript += event.results[index][0].transcript;
+        }
+      }
+
+      insertDictatedText(transcript);
+    };
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    setError("");
+    setIsListening(true);
+    try {
+      recognition.start();
+    } catch {
+      setIsListening(false);
+      setError("Unable to start speech recognition. Please try again.");
+    }
   };
 
   const getToolbarButtonClass = (active: boolean) =>
@@ -356,18 +455,55 @@ function NoteEditor() {
               </button>
             </div>
 
-            <div
-              ref={editorRef}
-              contentEditable
-              onMouseUp={saveSelection}
-              onKeyUp={saveSelection}
-              onInput={(event) =>
-                setContent((event.target as HTMLDivElement).innerHTML)
-              }
-              className="min-h-56 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-900 [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:list-disc [&_ul]:pl-6"
-              style={{ fontFamily: font }}
-              suppressContentEditableWarning
-            />
+            <div className="relative">
+              <div
+                ref={editorRef}
+                contentEditable
+                onMouseUp={saveSelection}
+                onKeyUp={saveSelection}
+                onInput={(event) =>
+                  setContent((event.target as HTMLDivElement).innerHTML)
+                }
+                className="min-h-56 w-full rounded-md border border-zinc-300 px-3 py-2 pb-14 pr-24 text-sm text-zinc-900 outline-none transition focus:border-zinc-900 [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:list-disc [&_ul]:pl-6"
+                style={{ fontFamily: font }}
+                suppressContentEditableWarning
+              />
+              <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                {isListening ? (
+                  <span className="text-sm font-medium text-red-600">Listening...</span>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={handleVoiceToggle}
+                  aria-label={isListening ? "Stop dictation" : "Start dictation"}
+                  title={isListening ? "Stop dictation" : "Start dictation"}
+                  className={`rounded-full border p-2 shadow-sm transition ${
+                    isListening
+                      ? "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                      : "border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-100"
+                  }`}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
+                    <path
+                      d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M19 11a7 7 0 0 1-14 0M12 18v3M8 21h8"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
 
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
