@@ -2,13 +2,13 @@
 
 ## Overview
 
-A modern web application enabling users to create, manage, and edit personal notes and checklists. The app supports user authentication and provides a clean, responsive user experience. Built with Next.js, Supabase, and Tailwind CSS, and intended for seamless deployment on Vercel.
+A modern web application enabling users to create, manage, and edit personal notes, checklists, and add voice-based text notes via speech-to-text. The app supports user authentication and provides a clean, responsive user experience. Built with Next.js, Supabase, and Tailwind CSS, and intended for seamless deployment on Vercel.
 
 ---
 
 ## Goals
 
-- Provide a simple, intuitive interface for taking notes and creating checklists.
+- Provide a simple, intuitive interface for taking notes, creating checklists, and adding text notes via voice (speech-to-text).
 - Allow users to register, log in, and securely manage their own notes.
 - Ensure data persistence and real-time updates via Supabase.
 - Utilize a responsive UI for mobile and desktop access.
@@ -20,6 +20,7 @@ A modern web application enabling users to create, manage, and edit personal not
 - **Frontend**: Next.js (React)
 - **Backend/Database**: Supabase (PostgreSQL, Auth, and Realtime)
 - **Styling**: Tailwind CSS
+- **Speech-to-Text**: Web Speech API (or a suitable browser-based speech recognition library)
 - **Deployment**: Vercel
 
 ---
@@ -32,8 +33,8 @@ A modern web application enabling users to create, manage, and edit personal not
    - Supabase Auth (email/password, extensible to OAuth providers).
 
 2. **Notes Management**
-   - Create a new note with a title and content.
-   - Edit and update existing notes.
+   - Create a new note with a title and content, optionally input via voice using speech-to-text.
+   - Edit and update existing notes, including the ability to add or update content with speech-to-text.
    - View a list of all previously created notes.
    - Delete notes.
 
@@ -42,7 +43,13 @@ A modern web application enabling users to create, manage, and edit personal not
    - Add, toggle, edit, or remove checklist items.
    - View, edit, and delete existing checklists.
 
-4. **User Experience**
+4. **Voice Note Entry**
+   - Add notes by dictating through the microphone using speech-to-text.
+   - Option to convert spoken words directly into note content when creating or editing a note.
+   - Clear visual indication of when the app is “listening” for speech input.
+   - Accessibility support for hands-free note taking.
+
+5. **User Experience**
    - Responsive design for desktop and mobile.
    - Clean, modern UI with Tailwind CSS.
    - Loading and empty states.
@@ -58,7 +65,7 @@ A modern web application enabling users to create, manage, and edit personal not
   - `id`: UUID (Primary Key)
   - `user_id`: UUID (Foreign Key to auth.users)
   - `title`: Text
-  - `content`: Text
+  - `content`: Text (includes text entered manually or via speech-to-text)
   - `created_at`: Timestamp
   - `updated_at`: Timestamp
 
@@ -83,9 +90,9 @@ A modern web application enabling users to create, manage, and edit personal not
 
 - `/` : Dashboard / home (list notes & checklists, quick access to create new)
 - `/login` : Login/Signup
-- `/notes/[id]` : View/Edit a specific note
+- `/notes/[id]` : View/Edit a specific note (including speech-to-text for editing)
 - `/checklists/[id]` : View/Edit a specific checklist
-- `/notes/new` : Create note
+- `/notes/new` : Create note (with speech-to-text option)
 - `/checklists/new` : Create checklist
 
 ---
@@ -93,9 +100,10 @@ A modern web application enabling users to create, manage, and edit personal not
 ## UI Components
 
 - Auth forms (login, signup)
-- Notes list and editor
+- Notes list and editor (including voice input controls)
 - Checklist list and editor (with item toggle/edit)
 - Navigation bar/user menu
+- Voice note capture button and microphone activity indicators
 - Responsive layout components
 - Toasts or notifications on user actions
 
@@ -105,6 +113,7 @@ A modern web application enabling users to create, manage, and edit personal not
 
 - Data access restricted to authenticated users via Supabase RLS.
 - User authentication tokens stored securely (e.g., HttpOnly cookies or NextAuth session if extended).
+- If voice data or processing is not strictly browser-based, inform users regarding privacy of transcriptions.
 
 ---
 
@@ -120,10 +129,11 @@ A modern web application enabling users to create, manage, and edit personal not
 1. **Project setup**: Next.js, Tailwind CSS, Supabase SDK.
 2. **Supabase schema & RLS**: Design tables, enable secure policies.
 3. **Authentication UI & logic**.
-4. **Notes CRUD**.
+4. **Notes CRUD (with initial text and speech-to-text entry support)**.
 5. **Checklists CRUD (+ item management)**.
-6. **Styling & Responsive UI**.
-7. **Testing, Deployment, and Polishing.**
+6. **Speech-to-text user interface and integration**.
+7. **Styling & Responsive UI**.
+8. **Testing, Deployment, and Polishing.**
 
 ---
 
@@ -133,5 +143,7 @@ A modern web application enabling users to create, manage, and edit personal not
 - Search & filtering.
 - Sharing notes/checklists (if allowed by privacy constraints).
 - Offline support (PWA enhancements).
+- Voice notes playback (text-to-speech).
+- Support for multiple languages in speech recognition.
 
 ---

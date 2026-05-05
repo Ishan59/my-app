@@ -105,14 +105,21 @@ function NoteEditor() {
       setTitle(data.title ?? "");
       const loadedContent = data.content ?? "";
       setContent(loadedContent);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = loadedContent;
-      }
       setIsLoading(false);
     };
 
     void loadNote();
   }, [noteId]);
+
+  useEffect(() => {
+    if (isLoading || !editorRef.current) {
+      return;
+    }
+
+    if (editorRef.current.innerHTML !== content) {
+      editorRef.current.innerHTML = content;
+    }
+  }, [content, isLoading]);
 
   useEffect(() => {
     const handleSelectionChange = () => {
